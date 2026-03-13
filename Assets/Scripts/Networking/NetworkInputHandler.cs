@@ -6,21 +6,36 @@ using UnityEngine;
 
 public class NetworkInputHandler : MonoBehaviour, INetworkRunnerCallbacks
 {
-    
+    private bool _jumpPressed;
+    private bool _attackPressed;
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.Space))
+        {
+            _jumpPressed = true;
+        }
+
+        if (Input.GetKeyDown(KeyCode.J) || Input.GetMouseButtonDown(0))
+        {
+            _attackPressed = true;
+        }
+    }
+
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
         var data = new NetworkInputData();
 
         data.horizontalInput = Input.GetAxisRaw("Horizontal");
 
-        
-        data.buttons.Set(MyButtons.Jump, Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.Space));
-        data.buttons.Set(MyButtons.Attack, Input.GetMouseButton(0) || Input.GetKey(KeyCode.J));
+        data.buttons.Set(MyButtons.Jump, _jumpPressed);
+        data.buttons.Set(MyButtons.Attack, _attackPressed);
 
         input.Set(data);
-    }
 
-   
+        _jumpPressed = false;
+        _attackPressed = false;
+    }
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player) { }
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
