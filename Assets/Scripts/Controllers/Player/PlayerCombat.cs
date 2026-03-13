@@ -11,6 +11,8 @@ public class PlayerCombat : NetworkBehaviour
     [SerializeField] private int attackDamage = 1;
 
     [Networked] public NetworkBool IsAttacking { get; set; }
+
+    [Networked] private NetworkButtons _combatButtonsPrev { get; set; }
     private TickTimer attackCooldown;
 
     public override void Spawned()
@@ -24,19 +26,25 @@ public class PlayerCombat : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-        if (player == null) return;
-        if (player.IsDead) return;
+        if (player == null || player.IsDead) return;
 
         if (GetInput(out NetworkInputData data))
         {
-            if (data.buttons.WasPressed(data.buttons, MyButtons.Attack)
-                && attackCooldown.ExpiredOrNotRunning(Runner))
+            var pressed = data.buttons.GetPressed(_combatButtonsPrev);
+
+            if (pressed.IsSet(MyButtons.Attack) && attackCooldown.ExpiredOrNotRunning(Runner))
             {
                 IsAttacking = true;
                 attackCooldown = TickTimer.CreateFromSeconds(Runner, 0.5f);
 
-                RPC_PlayAttackAnimation();
+                // Chống spam RPC khi mạng lag (Resimulation)
+                if (Runner.IsForward)
+                {
+                    RPC_PlayAttackAnimation();
+                }
             }
+
+            _combatButtonsPrev = data.buttons;
         }
 
         if (attackCooldown.Expired(Runner))
@@ -50,6 +58,7 @@ public class PlayerCombat : NetworkBehaviour
             anim.SetTrigger("Attack");
     }
 
+    // Hàm này gọi bằng Animation Event trong clip chém
     public void TriggerAttackDamage()
     {
         if (!HasStateAuthority) return;
