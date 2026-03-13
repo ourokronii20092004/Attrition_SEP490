@@ -48,6 +48,8 @@ GameObject:
   - component: {fileID: 4854828288262500289}
   - component: {fileID: 8687308238461515992}
   - component: {fileID: 8805790379459285585}
+  - component: {fileID: 7965685129494306560}
+  - component: {fileID: -5395578408067921863}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -192,8 +194,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: -0.0005648413}
-  m_Size: {x: 0.22000001, y: 0.38912764}
+  m_Offset: {x: 0, y: 0.00010820791}
+  m_Size: {x: 0.22000001, y: 0.38778156}
   m_Direction: 0
 --- !u!95 &1856654574502175554
 Animator:
@@ -224,12 +226,12 @@ Animation:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6831727267532873526}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 4
-  m_Animation: {fileID: 0}
+  m_Animation: {fileID: 7400000, guid: 2484ede4b7b850c4296782dd0e33144e, type: 2}
   m_Animations: []
   m_WrapMode: 0
-  m_PlayAutomatically: 1
+  m_PlayAutomatically: 0
   m_AnimatePhysics: 0
   m_UpdateMode: 0
   m_CullingType: 0
@@ -245,19 +247,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbf258f211cb5bb489b58bc293ba1d21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  isLocalPlayer: 1
-  moveSpeed: 10
+  moveSpeed: 30
   jumpForce: 15
+  jumpCutMultiplier: 0.4
   rb: {fileID: 8158020556837803344}
   groundCheck: {fileID: 6009787360683369443}
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
   groundCheckRadius: 0.2
+  _currentHP: 0
+  _isDeadNetworked:
+    _value: 0
+  _IsGrounded:
+    _value: 0
+  _IsFacingRight:
+    _value: 1
   maxHP: 100
-  currentHP: 0
-  invincibleTime: 0.8
-  isGrounded: 0
 --- !u!114 &8687308238461515992
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -270,7 +276,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc24b614c1a3c0e499f44ce3dca65429, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCombat
-  playerController: {fileID: 4854828288262500289}
+  player: {fileID: 0}
   anim: {fileID: 1856654574502175554}
   attackPoint: {fileID: 7035351457917283103}
   attackRange: 3
@@ -278,9 +284,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 768
   attackDamage: 1
-  knockbackForceToEnemy: 8
-  attackRate: 3
-  attackAngle: 104
+  _IsAttacking:
+    _value: 0
 --- !u!114 &8805790379459285585
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -294,8 +299,47 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimation
   anim: {fileID: 1856654574502175554}
-  playerController: {fileID: 4854828288262500289}
+  player: {fileID: 0}
   rb: {fileID: 8158020556837803344}
+--- !u!114 &7965685129494306560
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6831727267532873526}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 3715595291
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 4854828288262500289}
+  - {fileID: 8687308238461515992}
+  - {fileID: 8805790379459285585}
+  - {fileID: -5395578408067921863}
+  ForceRemoteRenderTimeframe: 0
+--- !u!114 &-5395578408067921863
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6831727267532873526}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkTransform
+  _stateAuthorityChangeErrorCorrectionDelta: 0
+  SyncScale: 1
+  SyncParent: 0
+  _autoAOIOverride: 1
+  DisableSharedModeInterpolation: 0
 --- !u!1 &7643912872851063712
 GameObject:
   m_ObjectHideFlags: 0

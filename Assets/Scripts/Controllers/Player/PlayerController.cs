@@ -1,196 +1,126 @@
-﻿using System.Collections;
+﻿using Fusion;
 using UnityEngine;
+using System.Collections;
 
-public class PlayerController : MonoBehaviour, IDamageable
+public class PlayerController : NetworkBehaviour, IDamageable
 {
-    [Header("---- NETWORK CONFIG ----")]
-    [Tooltip("Đánh dấu true nếu nhân vật này do máy hiện tại điều khiển.")]
-    public bool isLocalPlayer = true;
-
-    [Header("---- MOVEMENT SETTINGS ----")]
+    [Header("---- MOVEMENT ----")]
     [SerializeField] private float moveSpeed = 10f;
     [SerializeField] private float jumpForce = 15f;
+    [SerializeField] private float jumpCutMultiplier = 0.4f;
 
-    [Tooltip("Hệ số cắt lực nhảy (Hollow Knight Mechanic). Càng nhỏ thì buông phím rơi càng nhanh.")]
-    [SerializeField][Range(0f, 1f)] private float jumpCutMultiplier = 0.4f; // MỚI THÊM
-
-    [Header("---- PHYSICS SETTINGS ----")]
+    [Header("---- PHYSICS ----")]
     [SerializeField] private Rigidbody2D rb;
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundLayer;
-    [SerializeField] private float groundCheckRadius = 0.2f;
+    [SerializeField] private float groundCheckRadius = 0.3f;
 
-    [Header("---- HEALTH & STATS ----")]
+    [Networked] public int currentHP { get; set; }
+    [Networked] public NetworkBool isDeadNetworked { get; set; }
+    [Networked] public NetworkBool IsGrounded { get; set; }
+    [Networked] public NetworkBool IsFacingRight { get; set; } = true;
+
+    
+    [Networked] private NetworkButtons _buttonsPrev { get; set; }
+
     public int maxHP = 100;
-    public int currentHP;
-    public float invincibleTime = 0.8f;
-
-    private float horizontalInput;
-    public bool isGrounded;
-    private bool isKnockedBack = false;
     private bool isInvincible = false;
-    private bool isDead = false;
-
     private SpriteRenderer sr;
-    private int playerLayer;
-    private int enemyLayer;
-    private int bossLayer;
 
-    public bool IsFacingRight { get; private set; } = true;
-
-    void Start()
+    public override void Spawned()
     {
-        if (rb == null) rb = GetComponent<Rigidbody2D>();
+        if (HasStateAuthority) currentHP = maxHP;
         sr = GetComponentInChildren<SpriteRenderer>();
 
-        currentHP = maxHP;
-        playerLayer = gameObject.layer;
-        bossLayer = LayerMask.NameToLayer("Boss");
-        enemyLayer = LayerMask.NameToLayer("Enemy");
 
-        if (!isLocalPlayer)
+        if (!HasStateAuthority)
         {
-            rb.isKinematic = true;
+            rb.simulated = false;
         }
     }
 
-    void Update()
+    public override void FixedUpdateNetwork()
     {
-        if (!isLocalPlayer || isKnockedBack || isDead) return;
+        if (isDeadNetworked) return;
 
-        horizontalInput = Input.GetAxisRaw("Horizontal");
+        if (GetInput(out NetworkInputData data))
+        {
+            
+            rb.linearVelocity = new Vector2(data.horizontalInput * moveSpeed, rb.linearVelocity.y);
+
+            
+            var pressed = data.buttons.GetPressed(_buttonsPrev);
+            var released = data.buttons.GetReleased(_buttonsPrev);
+
+            
+            if (pressed.IsSet(MyButtons.Jump) && IsGrounded)
+            {
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+            }
+
+            
+            if (released.IsSet(MyButtons.Jump) && rb.linearVelocity.y > 0)
+            {
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
+            }
+
+            
+            if (data.horizontalInput > 0) IsFacingRight = true;
+            else if (data.horizontalInput < 0) IsFacingRight = false;
+
+            
+            _buttonsPrev = data.buttons;
+        }
 
         CheckGround();
-        HandleJump();
-        HandleFlip();
     }
 
-    void FixedUpdate()
+   
+    public override void Render()
     {
-        if (!isLocalPlayer || isKnockedBack || isDead) return;
-
-        Move();
+        float targetScale = IsFacingRight ? Mathf.Abs(transform.localScale.x) : -Mathf.Abs(transform.localScale.x);
+        transform.localScale = new Vector3(targetScale, transform.localScale.y, transform.localScale.z);
     }
 
     void CheckGround()
     {
-        if (groundCheck != null)
-            isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+        IsGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer) != null;
     }
 
-    // --- CƠ CHẾ NHẢY HOLLOW KNIGHT ---
-    void HandleJump()
-    {
-        // 1. Nếu nhấn phím (Bấm W hoặc Space) và đang đứng trên đất -> Nhảy tối đa lực
-        if ((Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.Space)) && isGrounded)
-        {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-        }
+    public bool IsDead => isDeadNetworked;
 
-        // 2. Nếu nhả phím ra GIỮA CHỪNG lúc đang bay lên -> Cắt đứt lực bay, ép rơi xuống
-        if ((Input.GetKeyUp(KeyCode.W) || Input.GetKeyUp(KeyCode.Space)) && rb.linearVelocity.y > 0)
-        {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
-        }
-    }
-
-    void Move()
-    {
-        rb.linearVelocity = new Vector2(horizontalInput * moveSpeed, rb.linearVelocity.y);
-    }
-
-    void HandleFlip()
-    {
-        if (horizontalInput > 0 && !IsFacingRight) Flip();
-        else if (horizontalInput < 0 && IsFacingRight) Flip();
-    }
-
-    void Flip()
-    {
-        IsFacingRight = !IsFacingRight;
-        Vector3 currentScale = transform.localScale;
-        transform.localScale = new Vector3(currentScale.x * -1, currentScale.y, currentScale.z);
-    }
-
-    // --- IMPLEMENT IDAMAGEABLE ---
     public void TakeDamage(int damage)
     {
-        if (isInvincible || isDead) return;
-
+        if (isInvincible || isDeadNetworked || !HasStateAuthority) return;
         currentHP -= damage;
-        currentHP = Mathf.Max(currentHP, 0);
-        Debug.Log("Player HP: " + currentHP);
-
-        // Mở khóa combat nếu đang chém mà bị quái đập trúng (chống kẹt nút chém)
-        PlayerCombat combat = GetComponent<PlayerCombat>();
-        if (combat != null) combat.FinishAttack();
-
-        if (currentHP <= 0)
-        {
-            Die();
-        }
-        else
-        {
-            StartCoroutine(InvincibleCoroutine());
-        }
+        if (currentHP <= 0) Die();
+        else StartCoroutine(InvincibleCoroutine());
     }
 
     public void TakeKnockback(Vector2 direction, float force)
     {
-        if (isDead) return;
-
-        isKnockedBack = true;
-
-        if (isLocalPlayer)
-        {
-            rb.linearVelocity = Vector2.zero;
-            rb.AddForce(direction * force, ForceMode2D.Impulse);
-        }
-
-        Invoke("StopKnockback", 0.2f);
+        if (isDeadNetworked) return;
+        rb.linearVelocity = Vector2.zero;
+        rb.AddForce(direction * force, ForceMode2D.Impulse);
     }
 
-    public bool IsDead() => isDead;
+    private void Die()
+    {
+        isDeadNetworked = true;
+        rb.linearVelocity = Vector2.zero;
+    }
 
-    void StopKnockback() => isKnockedBack = false;
-
-    // --- LOGIC BẤT TỬ & CHẾT ---
     IEnumerator InvincibleCoroutine()
     {
         isInvincible = true;
-
-        if (bossLayer != -1) Physics2D.IgnoreLayerCollision(playerLayer, bossLayer, true);
-        if (enemyLayer != -1) Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, true);
-
-        float timer = 0f;
-        while (timer < invincibleTime)
+        float timer = 0.8f;
+        while (timer > 0)
         {
-            if (sr != null) sr.enabled = !sr.enabled;
+            if (sr) sr.enabled = !sr.enabled;
             yield return new WaitForSeconds(0.1f);
-            timer += 0.1f;
+            timer -= 0.1f;
         }
-
-        if (sr != null) sr.enabled = true;
-
-        if (bossLayer != -1) Physics2D.IgnoreLayerCollision(playerLayer, bossLayer, false);
-        if (enemyLayer != -1) Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, false);
-
+        if (sr) sr.enabled = true;
         isInvincible = false;
-    }
-
-    void Die()
-    {
-        isDead = true;
-        rb.linearVelocity = Vector2.zero;
-        Debug.Log("Player Dead");
-    }
-
-    void OnDrawGizmosSelected()
-    {
-        if (groundCheck != null)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
-        }
     }
 }

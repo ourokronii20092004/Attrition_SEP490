@@ -1,108 +1,74 @@
-﻿using UnityEngine;
+﻿using Fusion;
+using UnityEngine;
 
-public class PlayerCombat : MonoBehaviour
+public class PlayerCombat : NetworkBehaviour
 {
-    [Header("---- REFERENCES ----")]
-    [SerializeField] private PlayerController playerController;
-    [SerializeField] private Animator anim; // Đã thêm Animator vào đây để gom về 1 mối
-
-    [Header("---- ATTACK SETTINGS ----")]
+    [SerializeField] private PlayerController player;
+    [SerializeField] private Animator anim;
     [SerializeField] private Transform attackPoint;
     [SerializeField] private float attackRange = 1.5f;
     [SerializeField] private LayerMask targetLayers;
-
     [SerializeField] private int attackDamage = 1;
-    [SerializeField] private float knockbackForceToEnemy = 8f;
-    public float attackRate = 2f;
 
-    [Range(0, 360)]
-    [SerializeField] private float attackAngle = 90f;
+    [Networked] public NetworkBool IsAttacking { get; set; }
+    private TickTimer attackCooldown;
 
-    private float nextAttackTime = 0f;
-
-    // Cờ khóa chém để chống spam
-    public bool isAttacking { get; private set; }
-
-    void Start()
+    public override void Spawned()
     {
-        if (playerController == null) playerController = GetComponent<PlayerController>();
-        if (anim == null) anim = GetComponent<Animator>();
+        if (player == null)
+            player = GetComponent<PlayerController>();
+
+        if (anim == null)
+            anim = GetComponent<Animator>();
     }
 
-    void Update()
+    public override void FixedUpdateNetwork()
     {
-        if (!playerController.isLocalPlayer || playerController.IsDead()) return;
+        if (player == null) return;
+        if (player.IsDead) return;
 
-        if (isAttacking && Time.time >= nextAttackTime)
+        if (GetInput(out NetworkInputData data))
         {
-            isAttacking = false;
-            anim.SetBool("IsAttacking", false);
-        }
-
-        // Chống spam: Nếu ĐANG CHÉM thì tuyệt đối không nhận lệnh chém nữa
-        if (Time.time >= nextAttackTime && !isAttacking)
-        {
-            if (Input.GetKeyDown(KeyCode.J) || Input.GetMouseButtonDown(0))
+            if (data.buttons.WasPressed(data.buttons, MyButtons.Attack)
+                && attackCooldown.ExpiredOrNotRunning(Runner))
             {
-                isAttacking = true;
-                anim.SetBool("IsAttacking", true);
-                anim.SetTrigger("Attack");
+                IsAttacking = true;
+                attackCooldown = TickTimer.CreateFromSeconds(Runner, 0.5f);
 
-                nextAttackTime = Time.time + 1f / attackRate;
+                RPC_PlayAttackAnimation();
             }
         }
+
+        if (attackCooldown.Expired(Runner))
+            IsAttacking = false;
     }
 
-    // --- HÀM EVENT 1: Sẽ được gọi ngay khung hình mà thanh kiếm chém xuống ---
-    public void TriggerAttackDamage()
+    [Rpc(RpcSources.InputAuthority, RpcTargets.All)]
+    private void RPC_PlayAttackAnimation()
     {
-        Collider2D[] hitTargets = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, targetLayers);
+        if (anim != null)
+            anim.SetTrigger("Attack");
+    }
 
-        foreach (Collider2D targetCollider in hitTargets)
+    public void TriggerAttackDamage()
+    {
+        if (!HasStateAuthority) return;
+
+        Collider2D[] hitTargets = Physics2D.OverlapCircleAll(
+            attackPoint.position,
+            attackRange,
+            targetLayers
+        );
+
+        foreach (var target in hitTargets)
         {
-            Vector2 directionToTarget = (targetCollider.transform.position - transform.position).normalized;
-            Vector2 facingDirection = playerController.IsFacingRight ? Vector2.right : Vector2.left;
-
-            float angleToTarget = Vector2.Angle(facingDirection, directionToTarget);
-
-            if (angleToTarget < attackAngle / 2f)
+            IDamageable dmg = target.GetComponent<IDamageable>();
+            if (dmg != null)
             {
-                IDamageable damageableTarget = targetCollider.GetComponent<IDamageable>();
-
-                if (damageableTarget != null)
-                {
-                    damageableTarget.TakeDamage(attackDamage);
-
-                    Vector2 pushDir = (targetCollider.transform.position - transform.position).normalized;
-                    pushDir = new Vector2(pushDir.x, 0.2f).normalized;
-
-                    damageableTarget.TakeKnockback(pushDir, knockbackForceToEnemy);
-                }
+                dmg.TakeDamage(attackDamage);
+                Vector2 pushDir = (target.transform.position - transform.position).normalized;
+                dmg.TakeKnockback(pushDir, 5f);
             }
         }
-    }
-
-    // --- HÀM EVENT 2: Sẽ được gọi ở khung hình kết thúc hoạt ảnh chém ---
-    public void FinishAttack()
-    {
-        isAttacking = false;
-        anim.SetBool("IsAttacking", false);
-        anim.ResetTrigger("Attack");
-    }
-
-    void OnDrawGizmosSelected()
-    {
-        if (attackPoint == null) return;
-
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(attackPoint.position, attackRange);
-
-        Vector3 facingDirection = transform.localScale.x > 0 ? Vector3.right : Vector3.left;
-        Vector3 upperLimit = Quaternion.Euler(0, 0, attackAngle / 2f) * facingDirection;
-        Vector3 lowerLimit = Quaternion.Euler(0, 0, -attackAngle / 2f) * facingDirection;
-
-        Gizmos.color = new Color(1, 0, 0, 0.5f);
-        Gizmos.DrawRay(attackPoint.position, upperLimit * attackRange);
-        Gizmos.DrawRay(attackPoint.position, lowerLimit * attackRange);
     }
 }
