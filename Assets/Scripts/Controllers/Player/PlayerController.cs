@@ -12,12 +12,17 @@ public class PlayerController : NetworkBehaviour, IDamageable
     [Header("---- PHYSICS ----")]
     [SerializeField] private Rigidbody2D rb;
     [SerializeField] private LayerMask groundLayer;
-    [SerializeField] private float groundCheckDistance = 0.05f; // Thay thế cho Radius cũ
+    [SerializeField] private float groundCheckDistance = 0.05f;
 
     [Networked] public int currentHP { get; set; }
+    [Networked] public NetworkString<_32> PlayerName { get; set; }
     [Networked] public NetworkBool isDeadNetworked { get; set; }
     [Networked] public NetworkBool IsGrounded { get; set; }
     [Networked] public NetworkBool IsFacingRight { get; set; } = true;
+
+    // BIẾN MẠNG ĐỂ TỐI ƯU ANIMATION CLIENT
+    [Networked] public NetworkBool IsMoving { get; set; }
+    [Networked] public float NetworkVelocityY { get; set; }
 
     [Networked] private NetworkButtons _buttonsPrev { get; set; }
 
@@ -27,7 +32,11 @@ public class PlayerController : NetworkBehaviour, IDamageable
 
     public override void Spawned()
     {
-        if (HasStateAuthority) currentHP = maxHP;
+        if (HasStateAuthority)
+        {
+            currentHP = maxHP;
+            PlayerName = $"Player {Object.InputAuthority.PlayerId}";
+        }
         sr = GetComponentInChildren<SpriteRenderer>();
     }
 
@@ -35,29 +44,29 @@ public class PlayerController : NetworkBehaviour, IDamageable
     {
         if (isDeadNetworked) return;
 
-        // Gọi hàm quét đất bằng công nghệ chuẩn Mạng!
         CheckGround();
 
         if (GetInput(out NetworkInputData data))
         {
             rb.linearVelocity = new Vector2(data.horizontalInput * moveSpeed, rb.linearVelocity.y);
 
+            // Cập nhật trạng thái trực tiếp vào mạng
+            IsMoving = Mathf.Abs(data.horizontalInput) > 0.1f;
+            NetworkVelocityY = rb.linearVelocity.y;
+
             var pressed = data.buttons.GetPressed(_buttonsPrev);
             var released = data.buttons.GetReleased(_buttonsPrev);
 
+            // Logic nhảy chuẩn (Đã dọn dẹp code thừa và chống lún vật lý)
             if (pressed.IsSet(MyButtons.Jump) && IsGrounded)
             {
+                rb.position = new Vector2(rb.position.x, rb.position.y + 0.05f);
                 rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
             }
 
-            if (pressed.IsSet(MyButtons.Jump) && IsGrounded)
+            if (released.IsSet(MyButtons.Jump) && rb.linearVelocity.y > 0)
             {
-                // MẸO SỬA LỖI: Nhấc nhẹ vị trí Rigidbody lên 0.05f 
-                // để thoát khỏi sự lún vật lý (Depenetration) trước khi cấp lực
-                rb.position = new Vector2(rb.position.x, rb.position.y + 0.05f);
-
-                // Sau đó mới set lại vận tốc nhảy
-                rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
             }
 
             if (data.horizontalInput > 0) IsFacingRight = true;
@@ -69,24 +78,19 @@ public class PlayerController : NetworkBehaviour, IDamageable
 
     public override void Render()
     {
-        float targetScale = IsFacingRight ? Mathf.Abs(transform.localScale.x) : -Mathf.Abs(transform.localScale.x);
-        transform.localScale = new Vector3(targetScale, transform.localScale.y, transform.localScale.z);
+        if (sr != null)
+        {
+            // Tối ưu siêu việt: Lật ảnh bằng Card đồ họa, không lật Transform
+            sr.flipX = !IsFacingRight;
+        }
     }
 
-    // NÂNG CẤP HÀM CHECK GROUND DÀNH RIÊNG CHO PHOTON FUSION
     void CheckGround()
     {
-        // 1. Khai báo bộ lọc chỉ quét các vật thể thuộc Layer "Ground"
         ContactFilter2D filter = new ContactFilter2D();
         filter.SetLayerMask(groundLayer);
-
         RaycastHit2D[] hits = new RaycastHit2D[1];
-
-        // 2. Tùyệt chiêu rb.Cast(): 
-        // Lấy chính cái Capsule Collider của nhân vật ấn xuống dưới 0.05m. 
-        // Cách này ép Fusion Physics phải trực tiếp trả lời xem nó có đè lên đất không!
         int count = rb.Cast(Vector2.down, filter, hits, groundCheckDistance);
-
         IsGrounded = count > 0;
     }
 
