@@ -21,12 +21,19 @@ public class PlayerCombat : NetworkBehaviour
             player = GetComponent<PlayerController>();
 
         if (anim == null)
-            anim = GetComponent<Animator>();
+            anim = GetComponentInChildren<Animator>();
     }
 
     public override void FixedUpdateNetwork()
     {
         if (player == null || player.IsDead) return;
+
+        // Dời tâm chém theo hướng quay mặt của nhân vật (Khắc phục lỗi khi xài flipX)
+        if (attackPoint != null)
+        {
+            float sign = player.IsFacingRight ? 1f : -1f;
+            attackPoint.localPosition = new Vector3(Mathf.Abs(attackPoint.localPosition.x) * sign, attackPoint.localPosition.y, attackPoint.localPosition.z);
+        }
 
         if (GetInput(out NetworkInputData data))
         {
@@ -37,7 +44,6 @@ public class PlayerCombat : NetworkBehaviour
                 IsAttacking = true;
                 attackCooldown = TickTimer.CreateFromSeconds(Runner, 0.5f);
 
-                // Chống spam RPC khi mạng lag (Resimulation)
                 if (Runner.IsForward)
                 {
                     RPC_PlayAttackAnimation();
@@ -58,7 +64,6 @@ public class PlayerCombat : NetworkBehaviour
             anim.SetTrigger("Attack");
     }
 
-    // Hàm này gọi bằng Animation Event trong clip chém
     public void TriggerAttackDamage()
     {
         if (!HasStateAuthority) return;
