@@ -47,16 +47,33 @@ public class NetworkSpawner : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    private void OnGUI()
+    //private void OnGUI()
+    //{
+    //    if (FindObjectOfType<NetworkRunner>() == null)
+    //    {
+    //        if (GUI.Button(new Rect(Screen.width / 2 - 100, Screen.height / 2 - 50, 200, 40), "HOST")) StartGame(GameMode.Host);
+    //        if (GUI.Button(new Rect(Screen.width / 2 - 100, Screen.height / 2 + 10, 200, 40), "CLIENT")) StartGame(GameMode.Client);
+    //    }
+    //}
+    // Thêm 2 hàm này vào để gắn cho 2 nút UI mới:
+    [Header("UI References")]
+    public GameObject lobbyPanel; // Thêm biến này để chứa LobbyPanel
+
+    public void OnClickHost()
     {
-        if (FindObjectOfType<NetworkRunner>() == null)
-        {
-            if (GUI.Button(new Rect(Screen.width / 2 - 100, Screen.height / 2 - 50, 200, 40), "HOST")) StartGame(GameMode.Host);
-            if (GUI.Button(new Rect(Screen.width / 2 - 100, Screen.height / 2 + 10, 200, 40), "CLIENT")) StartGame(GameMode.Client);
-        }
+        // Tắt bảng Lobby ngay khi bấm nút
+        if (lobbyPanel != null) lobbyPanel.SetActive(false);
+        StartGame(GameMode.Host);
     }
 
-    
+    public void OnClickClient()
+    {
+        // Tắt bảng Lobby ngay khi bấm nút
+        if (lobbyPanel != null) lobbyPanel.SetActive(false);
+        StartGame(GameMode.Client);
+    }
+
+
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
     public void OnInput(NetworkRunner runner, NetworkInput input) { }
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }

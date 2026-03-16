@@ -30,12 +30,40 @@ public class PlayerController : NetworkBehaviour, IDamageable
     private bool isInvincible = false;
     private SpriteRenderer sr;
 
-    public override void Spawned()
+    public override async void Spawned()
     {
         if (HasStateAuthority)
         {
-            currentHP = maxHP;
-            PlayerName = $"Player {Object.InputAuthority.PlayerId}";
+            // Lấy userId đã lưu từ lúc nhấn nút Login ở UI
+            string savedUserId = PlayerPrefs.GetString("SavedUserId", "");
+
+            if (!string.IsNullOrEmpty(savedUserId))
+            {
+                var data = await APIManager.Instance.GetCharacterData(savedUserId);
+                if (data != null)
+                {
+                    // Đồng bộ lên mạng qua các biến [Networked]
+                    maxHP = (int)data.characterHealth;
+                    currentHP = maxHP;
+                    PlayerName = data.characterName;
+
+                    // Cập nhật Attack cho script Combat
+                    var combat = GetComponent<PlayerCombat>();
+                    if (combat != null)
+                    {
+                        // Bây giờ bạn đã có quyền truy cập vào biến này
+                        combat.attackDamage = (int)data.characterAttack;
+                    }
+
+                    Debug.Log($"Loaded: {PlayerName} - HP: {maxHP}");
+                }
+            }
+            else
+            {
+                // Dự phòng nếu không có ID (ví dụ test nhanh)
+                currentHP = maxHP;
+                PlayerName = $"Guest {Object.InputAuthority.PlayerId}";
+            }
         }
         sr = GetComponentInChildren<SpriteRenderer>();
     }
