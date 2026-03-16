@@ -8,8 +8,12 @@ public class PlayerCombat : NetworkBehaviour
     [SerializeField] private Transform attackPoint;
     [SerializeField] private float attackRange = 1.5f;
     [SerializeField] private LayerMask targetLayers;
-    [SerializeField] private int attackDamage = 1;
-
+    [SerializeField] private int _attackDamage = 1;
+    public int attackDamage
+    {
+        get => _attackDamage;
+        set => _attackDamage = value;
+    }
     [Networked] public NetworkBool IsAttacking { get; set; }
 
     [Networked] private NetworkButtons _combatButtonsPrev { get; set; }
@@ -23,6 +27,7 @@ public class PlayerCombat : NetworkBehaviour
         if (anim == null)
             anim = GetComponentInChildren<Animator>();
     }
+
 
     public override void FixedUpdateNetwork()
     {
