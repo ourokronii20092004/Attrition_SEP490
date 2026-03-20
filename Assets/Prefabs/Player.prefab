@@ -216,7 +216,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   moveSpeed: 15
-  jumpForce: 15
+  jumpForce: 20
   jumpCutMultiplier: 0.4
   rb: {fileID: 8158020556837803344}
   groundLayer:
@@ -224,12 +224,19 @@ MonoBehaviour:
     m_Bits: 64
   groundCheckDistance: 0.05
   _currentHP: 0
+  _PlayerName:
+    _length: 0
+    _data:
+      Data: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
   _isDeadNetworked:
     _value: 0
   _IsGrounded:
     _value: 0
   _IsFacingRight:
     _value: 1
+  _IsMoving:
+    _value: 0
+  _NetworkVelocityY: 0
   maxHP: 100
 --- !u!114 &8687308238461515992
 MonoBehaviour:
@@ -250,7 +257,7 @@ MonoBehaviour:
   targetLayers:
     serializedVersion: 2
     m_Bits: 768
-  attackDamage: 1
+  _attackDamage: 1
   _IsAttacking:
     _value: 0
 --- !u!114 &8805790379459285585

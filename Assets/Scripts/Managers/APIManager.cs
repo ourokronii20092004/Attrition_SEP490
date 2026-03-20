@@ -13,8 +13,7 @@ public class APIManager : MonoBehaviour
 
     void Awake() => Instance = this;
     [System.Serializable]
-
-    //new model class
+    
     public class LoginResponse
     {
         public string userId;

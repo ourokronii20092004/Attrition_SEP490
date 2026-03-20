@@ -19,8 +19,7 @@ public class PlayerAnimation : NetworkBehaviour
     {
         if (anim == null || player == null) return;
 
-        // TỐI ƯU TUYỆT ĐỐI: 
-        // Đọc trực tiếp trạng thái từ mạng. Cực kỳ mượt, không bao giờ bị chạy nốt hay giật lag.
+        
         anim.SetFloat("Speed", player.IsMoving ? 1f : 0f);
         anim.SetBool("IsGrounded", player.IsGrounded);
         anim.SetBool("IsDead", player.IsDead);

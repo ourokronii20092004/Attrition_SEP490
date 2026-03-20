@@ -20,7 +20,7 @@ public class PlayerController : NetworkBehaviour, IDamageable
     [Networked] public NetworkBool IsGrounded { get; set; }
     [Networked] public NetworkBool IsFacingRight { get; set; } = true;
 
-    // BIẾN MẠNG ĐỂ TỐI ƯU ANIMATION CLIENT
+    
     [Networked] public NetworkBool IsMoving { get; set; }
     [Networked] public float NetworkVelocityY { get; set; }
 
@@ -34,7 +34,7 @@ public class PlayerController : NetworkBehaviour, IDamageable
     {
         if (HasStateAuthority)
         {
-            // Lấy userId đã lưu từ lúc nhấn nút Login ở UI
+            
             string savedUserId = PlayerPrefs.GetString("SavedUserId", "");
 
             if (!string.IsNullOrEmpty(savedUserId))
@@ -42,16 +42,16 @@ public class PlayerController : NetworkBehaviour, IDamageable
                 var data = await APIManager.Instance.GetCharacterData(savedUserId);
                 if (data != null)
                 {
-                    // Đồng bộ lên mạng qua các biến [Networked]
+                    
                     maxHP = (int)data.characterHealth;
                     currentHP = maxHP;
                     PlayerName = data.characterName;
 
-                    // Cập nhật Attack cho script Combat
+                    
                     var combat = GetComponent<PlayerCombat>();
                     if (combat != null)
                     {
-                        // Bây giờ bạn đã có quyền truy cập vào biến này
+                        
                         combat.attackDamage = (int)data.characterAttack;
                     }
 
