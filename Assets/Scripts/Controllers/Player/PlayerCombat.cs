@@ -33,7 +33,7 @@ public class PlayerCombat : NetworkBehaviour
     {
         if (player == null || player.IsDead) return;
 
-        // Dời tâm chém theo hướng quay mặt của nhân vật (Khắc phục lỗi khi xài flipX)
+       
         if (attackPoint != null)
         {
             float sign = player.IsFacingRight ? 1f : -1f;

@@ -55,20 +55,20 @@ public class NetworkSpawner : MonoBehaviour, INetworkRunnerCallbacks
     //        if (GUI.Button(new Rect(Screen.width / 2 - 100, Screen.height / 2 + 10, 200, 40), "CLIENT")) StartGame(GameMode.Client);
     //    }
     //}
-    // Thêm 2 hàm này vào để gắn cho 2 nút UI mới:
+    
     [Header("UI References")]
-    public GameObject lobbyPanel; // Thêm biến này để chứa LobbyPanel
+    public GameObject lobbyPanel; 
 
     public void OnClickHost()
     {
-        // Tắt bảng Lobby ngay khi bấm nút
+        
         if (lobbyPanel != null) lobbyPanel.SetActive(false);
         StartGame(GameMode.Host);
     }
 
     public void OnClickClient()
     {
-        // Tắt bảng Lobby ngay khi bấm nút
+        
         if (lobbyPanel != null) lobbyPanel.SetActive(false);
         StartGame(GameMode.Client);
     }
