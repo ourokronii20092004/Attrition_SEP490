@@ -126,10 +126,19 @@ public class PlayerController : NetworkBehaviour, IDamageable
 
     public void TakeDamage(int damage)
     {
-        if (isInvincible || isDeadNetworked || !HasStateAuthority) return;
+        if (isInvincible || isDeadNetworked) return;
+
         currentHP -= damage;
-        if (currentHP <= 0) Die();
-        else StartCoroutine(InvincibleCoroutine());
+        Debug.Log($"Player {PlayerName} bị chém! Máu còn: {currentHP}");
+
+        if (currentHP <= 0)
+        {
+            Die();
+        }
+        else
+        {
+            StartCoroutine(InvincibleCoroutine());
+        }
     }
 
     public void TakeKnockback(Vector2 direction, float force)

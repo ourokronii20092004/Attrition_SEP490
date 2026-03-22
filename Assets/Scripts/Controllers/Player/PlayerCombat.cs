@@ -71,22 +71,31 @@ public class PlayerCombat : NetworkBehaviour
 
     public void TriggerAttackDamage()
     {
-        if (!HasStateAuthority) return;
+        // Máy dò 1: Xem Animation Event có thực sự gọi hàm này không?
+        Debug.Log(">>> [PLAYER] Đã bóp cò vung kiếm!");
 
-        Collider2D[] hitTargets = Physics2D.OverlapCircleAll(
-            attackPoint.position,
-            attackRange,
-            targetLayers
-        );
+        if (!HasStateAuthority && !HasInputAuthority) return;
+        if (attackPoint == null) { Debug.LogError("[PLAYER] Chưa gắn Attack Point!"); return; }
+
+        Collider2D[] hitTargets = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, targetLayers);
+
+        // Máy dò 2: Xem vòng tròn có chạm vào cái gì không?
+        Debug.Log($"[PLAYER] Vòng tròn quét trúng {hitTargets.Length} vật thể thuộc layer {LayerMask.LayerToName(targetLayers)}.");
 
         foreach (var target in hitTargets)
         {
             IDamageable dmg = target.GetComponent<IDamageable>();
             if (dmg != null)
             {
+                Debug.Log($"[PLAYER] Đã chém trúng quái: {target.name}");
                 dmg.TakeDamage(attackDamage);
                 Vector2 pushDir = (target.transform.position - transform.position).normalized;
+                pushDir = new Vector2(pushDir.x, 0.5f).normalized;
                 dmg.TakeKnockback(pushDir, 5f);
+            }
+            else
+            {
+                Debug.LogWarning($"[PLAYER] Quét trúng {target.name} nhưng nó KHÔNG có script chứa IDamageable!");
             }
         }
     }
