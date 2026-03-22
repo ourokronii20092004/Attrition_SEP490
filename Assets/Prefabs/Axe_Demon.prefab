@@ -15,6 +15,8 @@ GameObject:
   - component: {fileID: 7480645594272617895}
   - component: {fileID: 1225760942499329285}
   - component: {fileID: 6212655201303181169}
+  - component: {fileID: 320469981377886090}
+  - component: {fileID: 1911168615339746473}
   m_Layer: 8
   m_Name: Axe_Demon
   m_TagString: Enemy
@@ -196,23 +198,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Attrition.Controllers.EnemyController
   anim: {fileID: 7480645594272617895}
-  attackClips:
-  - {fileID: 7400000, guid: 42d58a42cbf0e0c4b902667736a3d48e, type: 2}
-  - {fileID: 7400000, guid: 352fa315e659b964f9f3abafe18f7766, type: 2}
+  _Health: 0
+  _isDeadNetworked:
+    _value: 0
   maxHealth: 10
   attackDamage: 1
   knockbackForce: 8
+  attackPoint: {fileID: 5218382753634733620}
+  attackRange: 3
+  attackAngle: 112
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 128
   attackRecoveryTime: 1
   deathAnimDuration: 1.133
   knockbackDuration: 0.2
   deadColliderSize: {x: 1, y: 0.2}
   deadColliderOffset: {x: 0, y: -0.5}
-  attackPoint: {fileID: 5218382753634733620}
-  attackRange: 5
-  playerLayer:
-    serializedVersion: 2
-    m_Bits: 128
-  attackAngle: 82
+  _IsAttacking:
+    _value: 0
+  _IsKnockbackActive:
+    _value: 0
 --- !u!114 &6212655201303181169
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -225,20 +231,55 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f10984c4b524544bb3a30aa97ba3e5d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AxeDemonAI
-  hasAuthority: 1
-  enemyCombat: {fileID: 1225760942499329285}
+  enemyController: {fileID: 1225760942499329285}
   anim: {fileID: 7480645594272617895}
-  patrolSpeed: 1.5
-  chaseSpeed: 3
+  patrolSpeed: 2
+  chaseSpeed: 5
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 64
   wallCheckDistance: 0.7
-  giveUpDuration: 3
   patrolDistance: 2
   waitTimeAtPoint: 1
-  viewRadius: 5
-  viewAngle: 360
+  giveUpDuration: 3
+  viewRadius: 3
+  viewAngle: 90
+--- !u!114 &320469981377886090
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2368997048418387079}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 909415917
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 1225760942499329285}
+  - {fileID: 6212655201303181169}
+  ForceRemoteRenderTimeframe: 0
+--- !u!111 &1911168615339746473
+Animation:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2368997048418387079}
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Animation: {fileID: 7400000, guid: 7013830dd0359c74e848823b872beba1, type: 2}
+  m_Animations: []
+  m_WrapMode: 0
+  m_PlayAutomatically: 1
+  m_AnimatePhysics: 0
+  m_UpdateMode: 0
+  m_CullingType: 0
 --- !u!1 &6239148214477598644
 GameObject:
   m_ObjectHideFlags: 0
