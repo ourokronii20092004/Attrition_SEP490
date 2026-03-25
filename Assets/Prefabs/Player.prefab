@@ -58,7 +58,7 @@ Rigidbody2D:
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_GravityScale: 2
-  m_Material: {fileID: 6200000, guid: 122dd342cbe876648abbc73a9784f9ac, type: 2}
+  m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -79,7 +79,7 @@ CapsuleCollider2D:
   m_Enabled: 1
   serializedVersion: 3
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 122dd342cbe876648abbc73a9784f9ac, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -215,19 +215,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbf258f211cb5bb489b58bc293ba1d21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
+  combatComp: {fileID: 8687308238461515992}
+  animationComp: {fileID: 8805790379459285585}
   moveSpeed: 15
   jumpForce: 20
-  jumpCutMultiplier: 0.4
   rb: {fileID: 8158020556837803344}
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
-  groundCheckDistance: 0.05
   _currentHP: 0
-  _PlayerName:
-    _length: 0
-    _data:
-      Data: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
   _isDeadNetworked:
     _value: 0
   _IsGrounded:
@@ -250,14 +246,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc24b614c1a3c0e499f44ce3dca65429, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCombat
-  player: {fileID: 4854828288262500289}
-  anim: {fileID: 5583409243245334148}
+  animationComp: {fileID: 8805790379459285585}
   attackPoint: {fileID: 7035351457917283103}
   attackRange: 3
   targetLayers:
     serializedVersion: 2
     m_Bits: 768
-  _attackDamage: 1
+  attackDamage: 1
   _IsAttacking:
     _value: 0
 --- !u!114 &8805790379459285585
@@ -273,7 +268,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimation
   anim: {fileID: 5583409243245334148}
-  player: {fileID: 4854828288262500289}
+  sr: {fileID: 6644002639049578078}
 --- !u!114 &7965685129494306560
 MonoBehaviour:
   m_ObjectHideFlags: 0
