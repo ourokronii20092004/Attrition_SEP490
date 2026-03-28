@@ -122,8 +122,20 @@ public class NetworkSpawner : MonoBehaviour, INetworkRunnerCallbacks
         StartGame(GameMode.Client);
     }
 
-    // --- CÁC CALLBACK BẮT BUỘC ---
-    public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
+    public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
+    {
+        if (runner.IsServer)
+        {
+            if (runner.TryGetPlayerObject(player, out NetworkObject playerObj))
+            {
+                runner.Despawn(playerObj);
+
+                runner.SetPlayerObject(player, null);
+
+                Debug.Log($"[SERVER] Người chơi {player.PlayerId} đã thoát.");
+            }
+        }
+    }
     public void OnInput(NetworkRunner runner, NetworkInput input) { }
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason) { }

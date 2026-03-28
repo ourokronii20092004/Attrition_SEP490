@@ -233,7 +233,7 @@ MonoBehaviour:
   _IsMoving:
     _value: 0
   _NetworkVelocityY: 0
-  maxHP: 100
+  maxHP: 5
 --- !u!114 &8687308238461515992
 MonoBehaviour:
   m_ObjectHideFlags: 0

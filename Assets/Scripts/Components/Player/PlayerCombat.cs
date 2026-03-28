@@ -56,14 +56,12 @@ public class PlayerCombat : NetworkBehaviour
 
         Debug.Log("==================================");
 
-        // Khai báo bộ lọc quét (Chỉ quét đúng Layer quái)
         Collider2D[] results = new Collider2D[10];
         ContactFilter2D filter = new ContactFilter2D();
         filter.useLayerMask = true;
         filter.layerMask = targetLayers;
-        filter.useTriggers = false; // Bỏ qua mấy cái vùng trigger
+        filter.useTriggers = false;
 
-        // TUYỆT CHIÊU CỦA FUSION: Quét trong vũ trụ vật lý của mạng
         int count = Runner.GetPhysicsScene2D().OverlapCircle(attackPoint.position, attackRange, filter, results);
 
         Debug.Log($"[PLAYER] Fusion quét được {count} mục tiêu.");
