@@ -11,14 +11,15 @@ public class EnemyAnimation : NetworkBehaviour
         if (anim == null) anim = GetComponentInChildren<Animator>();
         originalScale = transform.localScale;
     }
+
     public void UpdateSpeed(float speed)
     {
         if (anim != null) anim.SetFloat("Speed", speed);
     }
 
-    public void FaceTarget(float targetX)
+    public void FaceDirection(float dirX)
     {
-        float dirX = (targetX > transform.position.x) ? 1f : -1f;
+        if (dirX == 0) return;
         transform.localScale = new Vector3(Mathf.Abs(originalScale.x) * dirX, originalScale.y, originalScale.z);
     }
 
@@ -26,7 +27,7 @@ public class EnemyAnimation : NetworkBehaviour
     {
         if (anim != null)
         {
-            anim.SetInteger("AttackIndex", attackIndex); 
+            anim.SetInteger("AttackIndex", attackIndex);
             anim.SetTrigger("Attack");
         }
     }

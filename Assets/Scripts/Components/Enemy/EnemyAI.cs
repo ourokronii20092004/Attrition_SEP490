@@ -20,6 +20,9 @@ public class EnemyAI : NetworkBehaviour
     private Transform playerTarget;
     private bool isChasing = false;
 
+    [Networked] public float NetSpeed { get; set; }
+    [Networked] public float NetFacingDir { get; set; } = 1f;
+
     public override void Spawned()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -27,12 +30,18 @@ public class EnemyAI : NetworkBehaviour
         currentTarget = startPosition + Vector2.right * 2f;
     }
 
+    public override void Render()
+    {
+        animationComp.UpdateSpeed(NetSpeed);
+        animationComp.FaceDirection(NetFacingDir);
+    }
+
     public void RunAILogic()
     {
         if (combatComp.IsAttacking || controller.IsKnockbackActive)
         {
             rb.linearVelocity = Vector2.zero;
-            animationComp.UpdateSpeed(0);
+            NetSpeed = 0; // Cập nhật biến Networked
             return;
         }
 
@@ -46,7 +55,7 @@ public class EnemyAI : NetworkBehaviour
             if (dist <= combatComp.attackRange)
             {
                 rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
-                animationComp.FaceTarget(currentTarget.x);
+                NetFacingDir = (currentTarget.x > transform.position.x) ? 1f : -1f; // Quay mặt về player
                 combatComp.AttemptAttack();
             }
             else
@@ -59,7 +68,8 @@ public class EnemyAI : NetworkBehaviour
             Patrol();
         }
 
-        animationComp.UpdateSpeed(Mathf.Abs(rb.linearVelocity.x));
+        // Cập nhật tốc độ để Client thấy
+        NetSpeed = Mathf.Abs(rb.linearVelocity.x);
     }
 
     private void FindPlayer()
@@ -86,16 +96,7 @@ public class EnemyAI : NetworkBehaviour
             }
         }
     }
-    void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, viewRadius);
-        Gizmos.color = Color.blue;
-        Vector2 center = Application.isPlaying ? startPosition : (Vector2)transform.position;
-        Gizmos.DrawLine(center + Vector2.left * 2f, center + Vector2.right * 2f);
-        Gizmos.DrawWireCube(center + Vector2.left * 2f, new Vector3(0.2f, 0.2f, 0));
-        Gizmos.DrawWireCube(center + Vector2.right * 2f, new Vector3(0.2f, 0.2f, 0));
-    }
+
     private void Patrol()
     {
         if (Mathf.Abs(transform.position.x - currentTarget.x) < 0.2f)
@@ -109,11 +110,14 @@ public class EnemyAI : NetworkBehaviour
     {
         float dirX = (target.x > transform.position.x) ? 1f : -1f;
         rb.linearVelocity = new Vector2(dirX * speed, rb.linearVelocity.y);
-        animationComp.FaceTarget(target.x);
+        NetFacingDir = dirX; // Cập nhật hướng cho Client biết
     }
 
     public void ForceFacePlayer()
     {
-        if (playerTarget != null) animationComp.FaceTarget(playerTarget.position.x);
+        if (playerTarget != null)
+        {
+            NetFacingDir = (playerTarget.position.x > transform.position.x) ? 1f : -1f;
+        }
     }
 }

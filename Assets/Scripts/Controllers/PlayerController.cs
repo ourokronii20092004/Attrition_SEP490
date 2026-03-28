@@ -40,15 +40,29 @@ public class PlayerController : NetworkBehaviour, IDamageable
 
     public override void FixedUpdateNetwork()
     {
-        if (isDeadNetworked) return;
-
         CheckGround();
+        NetworkVelocityY = rb.linearVelocity.y;
 
-        if (GetInput(out NetworkInputData data))
+        if (isDeadNetworked)
+        {
+            if (IsGrounded && rb.bodyType != RigidbodyType2D.Kinematic)
+            {
+                rb.linearVelocity = Vector2.zero;
+
+                rb.bodyType = RigidbodyType2D.Kinematic;
+
+                Collider2D col = GetComponent<Collider2D>();
+                if (col != null) col.enabled = false;
+
+                rb.position = new Vector2(rb.position.x, rb.position.y - 1f);
+            }
+            return;
+        }
+
+        if (GetInput(out NetworkInputData data))
         {
             rb.linearVelocity = new Vector2(data.horizontalInput * moveSpeed, rb.linearVelocity.y);
             IsMoving = Mathf.Abs(data.horizontalInput) > 0.1f;
-            NetworkVelocityY = rb.linearVelocity.y;
 
             var pressed = data.buttons.GetPressed(_buttonsPrev);
             if (pressed.IsSet(MyButtons.Jump) && IsGrounded)
@@ -102,7 +116,6 @@ public class PlayerController : NetworkBehaviour, IDamageable
     private void Die()
     {
         isDeadNetworked = true;
-        rb.linearVelocity = Vector2.zero;
     }
 
     IEnumerator InvincibleCoroutine()

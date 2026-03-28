@@ -79,10 +79,10 @@ public class AxeDemonController : NetworkBehaviour, IDamageable
         IsKnockbackActive = false;
 
         rb.linearVelocity = Vector2.zero;
-
         rb.bodyType = RigidbodyType2D.Kinematic;
-
         GetComponent<Collider2D>().enabled = false;
+
+        transform.position = new Vector2(transform.position.x, transform.position.y - 0.7f);
 
         animationComp.PlayDeath();
 
