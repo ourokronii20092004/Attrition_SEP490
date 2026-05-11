@@ -1,4 +1,5 @@
 ﻿using Fusion;
+using Fusion.Addons.Physics;
 using Fusion.Sockets;
 using System;
 using System.Collections.Generic;
@@ -26,6 +27,26 @@ public class NetworkSpawner : MonoBehaviour, INetworkRunnerCallbacks
     private NetworkRunner _runner;
     private bool _hasSpawnedEnemies = false;
 
+    private void Awake()
+    {
+        // RunnerSimulatePhysics2D phải nằm trên cùng GameObject với NetworkRunner và tồn tại khi StartGame khởi tạo,
+        // thì Fusion mới tự gán Runner (AddGlobal tay yêu cầu instance.Runner != null và sẽ Assert).
+        var sim = GetComponent<RunnerSimulatePhysics2D>();
+        if (sim == null)
+            sim = gameObject.AddComponent<RunnerSimulatePhysics2D>();
+        sim.ClientPhysicsSimulation = ClientPhysicsSimulation.SimulateForward;
+
+        // Frame pacing: giảm judder/stutter và xé hình phía client (Fusion tick vẫn lấy từ NetworkProjectConfig).
+        QualitySettings.vSyncCount = 1;
+#if UNITY_ANDROID || UNITY_IOS
+        Application.targetFrameRate = 60;
+#else
+        var rr = Screen.currentResolution.refreshRateRatio;
+        var hz = rr.denominator != 0 ? rr.numerator / (double)rr.denominator : 60.0;
+        Application.targetFrameRate = Mathf.Clamp(Mathf.RoundToInt((float)hz), 60, 360);
+#endif
+    }
+
     async void StartGame(GameMode mode)
     {
         _runner = gameObject.AddComponent<NetworkRunner>();
@@ -40,8 +61,6 @@ public class NetworkSpawner : MonoBehaviour, INetworkRunnerCallbacks
             Scene = SceneRef.FromIndex(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex),
             SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
         });
-
-        // ĐÃ XÓA ĐOẠN ĐẺ QUÁI Ở ĐÂY ĐỂ TRÁNH LỖI CRASH
     }
 
     private void SpawnAllEnemies()
@@ -126,12 +145,10 @@ public class NetworkSpawner : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (runner.IsServer)
         {
-            if (runner.TryGetPlayerObject(player, out NetworkObject playerObj))
+            if (runner.TryGetPlayerObject(player, out NetworkObject playerObj))
             {
-                runner.Despawn(playerObj);
-
+                runner.Despawn(playerObj);
                 runner.SetPlayerObject(player, null);
-
                 Debug.Log($"[SERVER] Người chơi {player.PlayerId} đã thoát.");
             }
         }
@@ -139,6 +156,7 @@ public class NetworkSpawner : MonoBehaviour, INetworkRunnerCallbacks
     public void OnInput(NetworkRunner runner, NetworkInput input) { }
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason) { }
+
     public void OnConnectedToServer(NetworkRunner runner) { }
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) { }
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] payload) { }

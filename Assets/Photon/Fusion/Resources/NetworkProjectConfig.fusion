@@ -21,14 +21,14 @@
         "SimulationUpdateTimeMode": 0,
         "PlayerCount": 10,
         "TickRateSelection": {
-            "Client": 64,
+            "Client": 60,
             "ServerIndex": 0,
             "ClientSendIndex": 1,
             "ServerSendIndex": 1
         },
         "MaxObjectDestroysSentPerPacket": 32,
         "EnableExperimentalPacketLossRecovery": false,
-        "EnableAdaptivePacketFragmentation": false
+        "EnableAdaptivePacketFragmentation": true
     },
     "Network": {
         "ConnectionTimeout": 10.0,
@@ -59,7 +59,7 @@
     },
     "Heap": {
         "PageShift": 15,
-        "PageCount": 256,
+        "PageCount": 384,
         "GlobalsSize": 0
     },
     "AssembliesToWeave": [
