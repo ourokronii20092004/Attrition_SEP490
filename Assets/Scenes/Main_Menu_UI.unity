@@ -993,7 +993,6 @@ MonoBehaviour:
   keyDown: 0
   maxIndex: 2
   audioSource: {fileID: 1170861870}
-  autoDetectMaxIndex: 1
 --- !u!114 &1170861872
 MonoBehaviour:
   m_ObjectHideFlags: 0
